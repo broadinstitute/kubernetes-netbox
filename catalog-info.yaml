@@ -1,0 +1,19 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: kubernetes-netbox
+  description: netbox
+  tags:
+    - gcp
+    - networking
+  annotations:
+    github.com/project-slug: broadinstitute/kubernetes-netbox
+    backstage.io/source-template: template:default/create-repo
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-id: kubernetes-netbox
+spec:
+  type: website
+  lifecycle: production
+  owner: 5cc-cga
+  system: kubernetes
+  domain: infrastructure-tools
