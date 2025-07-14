@@ -1,5 +1,5 @@
 ---
-site_name: 'kubernetes-netbox Documentation'
+site_name: kubernetes-netbox Documentation
 
 nav:
   - Home: README.md
