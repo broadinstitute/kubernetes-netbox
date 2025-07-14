@@ -1,0 +1,29 @@
+---
+name: dev-checks
+
+"on":
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "deployment/dev/**"
+
+jobs:
+  linting:
+    uses: broadinstitute/shared-workflows/.github/workflows/terraform-lint.yaml@v5.0.1
+    with:
+      working_directory: "./deployment/dev"
+  validation:
+    uses: broadinstitute/shared-workflows/.github/workflows/terraform-validate.yaml@hf_use_tfenv
+    with:
+      working_directory: "./deployment/dev"
+# NOTE: using tfsec because trivy tries to scan remote terraform modules and trivy-ignores
+#   at root level do not work for remote terraform modules
+  static_analysis:
+    uses: broadinstitute/shared-workflows/.github/workflows/terraform-static-analyze.yaml@v5.0.1
+    secrets:
+      wf_github_token: ${{ secrets.github_token }}
+    with:
+      working_directory: "./deployment/dev"
+      run_tfsec: true
+      run_trivy: false

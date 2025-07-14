@@ -10,3 +10,21 @@ updates:
     schedule:
       # Check for updates to GitHub Actions every month
       interval: monthly
+  - package-ecosystem: terraform
+    directory: /deployment/dev
+    groups:
+      terraform_dev:
+        patterns:
+          - "*"
+    schedule:
+      # Check for updates to Terraform every month
+      interval: monthly
+  - package-ecosystem: terraform
+    directory: /deployment/prod
+    groups:
+      terraform_prod:
+        patterns:
+          - "*"
+    schedule:
+      # Check for updates to Terraform every month
+      interval: monthly
