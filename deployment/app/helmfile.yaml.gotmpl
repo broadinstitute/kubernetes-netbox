@@ -9,16 +9,8 @@ environments:
   default:
     values:
       - default.yaml
-      - prod.yaml
-  dev:
-    values:
-      - default.yaml
       - dev.yaml
-  local:
-    values:
-      - default.yaml
-      - dev.yaml
-      - local.yaml
+      - terraform-output.json
 
 ---
 
@@ -31,18 +23,18 @@ environments:
 
 releases:
   - name: netbox-{{ .Values.Env }}
-    # NOTE: by defualt, in our installation there is a one-to-one mapping between 
-    #   namespace name and Google Project. TODO: add logic to allow override
-    namespace: {{ .Values.Google_Project }}
+    namespace: {{ .Values.Namespace }}
     chart: netbox/netbox
-    version: 6.0.33
+    version: 7.1.18
     values:
       # to debug database connections
       - extraEnvs:
           - name: DB_WAIT_DEBUG
             value: "1"
-      - image:
-          tag: "v3.4.10"
+      - commonLabels:
+          environment: {{ .Values.Env }}
+          team: "science-and-technology"
+          app: "netbox"
       - ingress:
           enabled: false
           className: "gce"
@@ -51,9 +43,15 @@ releases:
             - host: "netbox{{ if ne .Values.Env "prod" }}-{{ .Values.Env }}{{ end }}.broadinstitute.org"
               paths:
                 - "/"
-      - netbox:
-          allowedHosts:
-            - "netbox{{ if ne .Values.Env "prod" }}-{{ .Values.Env }}{{ end }}.broadinstitute.org"
+      - allowedHosts:
+          - "netbox{{ if ne .Values.Env "prod" }}-{{ .Values.Env }}{{ end }}.broadinstitute.org"
+      - resources:
+          limits:
+            cpu: "1"
+            memory: "2Gi"
+          requests:
+            cpu: "1"
+            memory: "2Gi"
       - serviceAccount:
           annotations:
             iam.gke.io/gcp-service-account: netbox-{{ .Values.Env }}@{{ .Values.Google_Project }}.iam.gserviceaccount.com
@@ -61,7 +59,7 @@ releases:
       - worker:
           sidecars:
             - name: cloud-sql-proxy
-              image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.16.0
+              image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.18.3
               imagePullPolicy: Always
               ports:
                 - name: database
@@ -73,7 +71,7 @@ releases:
                 - "--port=5432"
                 # Use auto iam authn to authenticate with the Cloud SQL instance
                 - "--auto-iam-authn"
-                - "{{ .Values.Google_Project }}:us-central1:netbox-{{ .Values.Env }}"
+                - {{ .Values.application_database.value | quote }}
            # You should use resource requests/limits as a best practice to prevent
            # pods from consuming too many resources and affecting the execution of
            # other pods. You should adjust the following values based on what your
@@ -82,23 +80,23 @@ releases:
               resources:
                 limits:
                   cpu: "1"
-                  memory: "2Gi"
+                  memory: "1Gi"
                 requests:
                   # The proxy's CPU use scales linearly with the amount of IO between
                   # the database and the application. Adjust this value based on your
                   # application's requirements.
-                  cpu: ".5"
+                  cpu: "1"
                   # The proxy's memory use scales linearly with the number of active
                   # connections. Fewer open connections will use less memory. Adjust
                   # this value based on your application's requirements.
-                  memory: "512Mi"
+                  memory: "1Gi"
               securityContext:
               # The default Cloud SQL Auth Proxy image runs as the
               # "nonroot" user and group (uid: 65532) by default.
                 runAsNonRoot: true
       - sidecars:
           - name: cloud-sql-proxy
-            image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.16.0
+            image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.18.3
             imagePullPolicy: Always
             ports:
               - name: database
@@ -110,7 +108,7 @@ releases:
               - "--port=5432"
               # Use auto iam authn to authenticate with the Cloud SQL instance
               - "--auto-iam-authn"
-              - "{{ .Values.Google_Project}}:us-central1:netbox-{{ .Values.Env }}"
+              - {{ .Values.application_database.value | quote }}
          # You should use resource requests/limits as a best practice to prevent
          # pods from consuming too many resources and affecting the execution of
          # other pods. You should adjust the following values based on what your
@@ -119,16 +117,16 @@ releases:
             resources:
               limits:
                 cpu: "1"
-                memory: "2Gi"
+                memory: "1Gi"
               requests:
                 # The proxy's CPU use scales linearly with the amount of IO between
                 # the database and the application. Adjust this value based on your
                 # application's requirements.
-                cpu: ".5"
+                cpu: "1"
                 # The proxy's memory use scales linearly with the number of active
                 # connections. Fewer open connections will use less memory. Adjust
                 # this value based on your application's requirements.
-                memory: "512Mi"
+                memory: "1Gi"
             securityContext:
             # The default Cloud SQL Auth Proxy image runs as the
             # "nonroot" user and group (uid: 65532) by default.
@@ -140,4 +138,4 @@ releases:
           port: 5432
           database: netbox
           username: netbox
-          password: ref+gcpsecrets://{{ .Values.Google_Project }}/netbox_{{ .Values.Env }}_netbox_db_password?version=2
+          password: ref+gcpsecrets://{{ .Values.Google_Project }}/{{ .Values.application_database_password_secret.value }}?version=1

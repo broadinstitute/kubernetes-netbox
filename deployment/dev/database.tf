@@ -1,7 +1,7 @@
 # Create a postgres cloudsql instance for application
 module "postgres" {
   source                      = "GoogleCloudPlatform/sql-db/google//modules/postgresql"
-  version                     = "26.2.1"
+  version                     = "26.2.2"
   database_version            = var.application_cloudsql_version
   name                        = local.application_instance
   project_id                  = var.core_project
@@ -11,15 +11,15 @@ module "postgres" {
   deletion_protection         = false # todo: Used to block Terraform from deleting a SQL Instance. - Set to false for now
   deletion_protection_enabled = false # todo: Enables protection of an instance from accidental deletion across all surfaces (API, gcloud, Cloud Console and Terraform). - Set to false for now
   enable_default_db           = true
-  database_flags              = [
+  database_flags = [
     {
       name  = "cloudsql.iam_authentication",
       value = "on",
     },
   ]
-  region                      = var.region
-  edition                     = "ENTERPRISE"
-  tier                        = var.application_cloudsql_tier
+  region  = var.region
+  edition = "ENTERPRISE"
+  tier    = var.application_cloudsql_tier
 
   ip_configuration = {
     ssl_mode = "ENCRYPTED_ONLY"

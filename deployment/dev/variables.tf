@@ -43,7 +43,7 @@ variable "namespace" {
 }
 
 variable "region" {
-  default     = "us-central1"
+  default     = "us-east4"
   description = "The default region in which resources will be created"
   type        = string
 }
