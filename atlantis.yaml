@@ -2,7 +2,7 @@
 version: 3
 projects:
   - name: prod
-    dir: deployments/prod
+    dir: deployment/prod
     apply_requirements: [approved]
   - name: dev
-    dir: deployments/dev
+    dir: deployment/dev
